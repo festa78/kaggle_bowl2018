@@ -26,8 +26,8 @@ from tqdm import tqdm
 from preprocess import central_scale_images, rotate_images, flip_images
 
 # Set some parameters
-IMG_WIDTH = 128
-IMG_HEIGHT = 128
+IMG_WIDTH = 256
+IMG_HEIGHT = 256
 IMG_CHANNELS = 3
 TRAIN_PATH = '../input/stage1_train/'
 TEST_PATH = '../input/stage1_test/'
@@ -37,41 +37,28 @@ seed = 42
 random.seed = seed
 np.random.seed = seed
 
-# # Get train and test IDs
-# train_ids = next(os.walk(TRAIN_PATH))[1]
-# test_ids = next(os.walk(TEST_PATH))[1]
+# Get train IDs
+train_ids = next(os.walk(TRAIN_PATH))[1]
 
-# # Get and resize train images and masks
-# X_train = np.zeros((len(train_ids), IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS), dtype=np.uint8)
-# Y_train = np.zeros((len(train_ids), IMG_HEIGHT, IMG_WIDTH, 1), dtype=np.bool)
-# print('Getting and resizing train images and masks ... ')
-# sys.stdout.flush()
-# for n, id_ in tqdm(enumerate(train_ids), total=len(train_ids)):
-#     path = TRAIN_PATH + id_
-#     img = imread(path + '/images/' + id_ + '.png')[:,:,:IMG_CHANNELS]
-#     img = resize(img, (IMG_HEIGHT, IMG_WIDTH), mode='constant', preserve_range=True)
-#     X_train[n] = img
-#     mask = np.zeros((IMG_HEIGHT, IMG_WIDTH, 1), dtype=np.bool)
-#     for mask_file in next(os.walk(path + '/masks/'))[2]:
-#         mask_ = imread(path + '/masks/' + mask_file)
-#         mask_ = np.expand_dims(resize(mask_, (IMG_HEIGHT, IMG_WIDTH), mode='constant',
-#                                       preserve_range=True), axis=-1)
-#         mask = np.maximum(mask, mask_)
-#     Y_train[n] = mask
+# Get and resize train images and masks
+X_train = np.zeros((len(train_ids), IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS), dtype=np.uint8)
+Y_train = np.zeros((len(train_ids), IMG_HEIGHT, IMG_WIDTH, 1), dtype=np.bool)
+print('Getting and resizing train images and masks ... ')
+sys.stdout.flush()
+for n, id_ in tqdm(enumerate(train_ids), total=len(train_ids)):
+    path = TRAIN_PATH + id_
+    img = imread(path + '/images/' + id_ + '.png')[:,:,:IMG_CHANNELS]
+    img = resize(img, (IMG_HEIGHT, IMG_WIDTH), mode='constant', preserve_range=True)
+    X_train[n] = img
+    mask = np.zeros((IMG_HEIGHT, IMG_WIDTH, 1), dtype=np.bool)
+    for mask_file in next(os.walk(path + '/masks/'))[2]:
+        mask_ = imread(path + '/masks/' + mask_file)
+        mask_ = np.expand_dims(resize(mask_, (IMG_HEIGHT, IMG_WIDTH), mode='constant',
+                                      preserve_range=True), axis=-1)
+        mask = np.maximum(mask, mask_)
+    Y_train[n] = mask
 
-# # Get and resize test images
-# X_test = np.zeros((len(test_ids), IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS), dtype=np.uint8)
-# sizes_test = []
-# print('Getting and resizing test images ... ')
-# sys.stdout.flush()
-# for n, id_ in tqdm(enumerate(test_ids), total=len(test_ids)):
-#     path = TEST_PATH + id_
-#     img = imread(path + '/images/' + id_ + '.png')[:,:,:IMG_CHANNELS]
-#     sizes_test.append([img.shape[0], img.shape[1]])
-#     img = resize(img, (IMG_HEIGHT, IMG_WIDTH), mode='constant', preserve_range=True)
-#     X_test[n] = img
-
-# print('Done!')
+print('Done!')
 
 # # Save images for convenience.
 # np.save('X_train.npy', X_train)
@@ -79,9 +66,9 @@ np.random.seed = seed
 # np.save('X_test.npy', X_test)
 
 # Load images.
-X_train = np.load('X_train.npy')
-Y_train = np.load('Y_train.npy')
-X_test = np.load('X_test.npy')
+# X_train = np.load('X_train.npy')
+# Y_train = np.load('Y_train.npy')
+# X_test = np.load('X_test.npy')
 
 # Data augmentation.
 print('data augmentation')
@@ -94,8 +81,11 @@ X_train_rot, Y_train_rot = rotate_images(X_train, Y_train)
 print('flip images')
 X_train_flip, Y_train_flip = flip_images(X_train, Y_train)
 
-X_train = np.concatenate((X_train, X_train_scale, X_train_rot, X_train_flip))
-Y_train = np.concatenate((Y_train, Y_train_scale, Y_train_rot, Y_train_flip))
+print('invert images')
+X_train_inv, Y_train_inv = invert_images(X_train, Y_train)
+
+X_train = np.concatenate((X_train, X_train_scale, X_train_rot, X_train_flip, X_train_inv))
+Y_train = np.concatenate((Y_train, Y_train_scale, Y_train_rot, Y_train_flip, Y_train_inv))
 
 # Define IoU metric
 def mean_iou(y_true, y_pred):
@@ -168,7 +158,7 @@ model.compile(optimizer='adam', loss='binary_crossentropy', metrics=[mean_iou])
 model.summary()
 
 # Fit model
-earlystopper = EarlyStopping(patience=5, verbose=1)
+earlystopper = EarlyStopping(patience=10, verbose=1)
 checkpointer = ModelCheckpoint('model-dsbowl2018-1.h5', verbose=1, save_best_only=True)
-results = model.fit(X_train, Y_train, validation_split=0.1, batch_size=16, epochs=50,
+results = model.fit(X_train, Y_train, validation_split=0.1, batch_size=16, epochs=500,
                     callbacks=[earlystopper, checkpointer])

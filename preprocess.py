@@ -95,3 +95,12 @@ def flip_images(X_imgs, Y_imgs):
     X_flip = np.array(X_flip, dtype = np.float32)
     Y_flip = np.array(Y_flip, dtype = np.float32)
     return X_flip , Y_flip
+
+
+def invert_images(X_imgs, Y_imgs):
+    X_inv = []
+    Y_inv = Y_imgs
+    for X in X_imgs.astype(np.uint8):
+        X_inv.append(np.invert(X))
+    X_inv = np.array(X_inv, dtype=np.float32)
+    return X_inv, Y_inv
