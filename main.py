@@ -23,7 +23,7 @@ from skimage.morphology import label
 import tensorflow as tf
 from tqdm import tqdm
 
-from preprocess import central_scale_images, rotate_images, flip_images
+from preprocess import central_scale_images, rotate_images, flip_images, invert_images
 
 # Set some parameters
 IMG_WIDTH = 256

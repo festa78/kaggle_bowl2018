@@ -46,8 +46,8 @@ def prob_to_rles(x, cutoff=0.5):
 
 
 # Set some parameters
-IMG_WIDTH = 128
-IMG_HEIGHT = 128
+IMG_WIDTH = 256
+IMG_HEIGHT = 256
 IMG_CHANNELS = 3
 TEST_PATH = '../input/stage1_test/'
 
