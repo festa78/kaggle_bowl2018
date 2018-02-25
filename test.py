@@ -9,8 +9,8 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 from skimage.io import imread
-from skimage.transform import resize
 from skimage.morphology import label
+from skimage.transform import resize
 import tensorflow as tf
 from tqdm import tqdm
 
@@ -69,7 +69,7 @@ for n, id_ in tqdm(enumerate(test_ids), total=len(test_ids)):
     img = resize(img, (IMG_HEIGHT, IMG_WIDTH), mode='constant', preserve_range=True)
     X_test[n] = img
 
-# Predict on train, val and test
+# Predict on test data.
 model = load_model('model-dsbowl2018-1.h5', custom_objects={'mean_iou': mean_iou})
 preds_test = model.predict(X_test, verbose=1)
 preds_test_t = (preds_test > 0.5).astype(np.uint8)

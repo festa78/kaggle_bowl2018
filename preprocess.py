@@ -2,6 +2,7 @@
 #   - https://medium.com/ymedialabs-innovation/data-augmentation-techniques-in-cnn-using-tensorflow-371ae43d5be9
 #   - https://www.kaggle.com/keegil/keras-u-net-starter-lb-0-277/notebook
 
+import cv2
 import tensorflow as tf
 import matplotlib.image as mpimg
 import numpy as np
@@ -104,3 +105,42 @@ def invert_images(X_imgs, Y_imgs):
         X_inv.append(np.invert(X))
     X_inv = np.array(X_inv, dtype=np.float32)
     return X_inv, Y_inv
+
+
+def add_salt_pepper_noise(X_imgs, Y_imgs):
+    # Need to produce a copy as to not modify the original image
+    X_sp = X_imgs.copy()
+    Y_sp = Y_imgs
+    row, col, _ = X_sp[0].shape
+    salt_vs_pepper = 0.2
+    amount = 0.004
+    num_salt = np.ceil(amount * X_sp[0].size * salt_vs_pepper)
+    num_pepper = np.ceil(amount * X_sp[0].size * (1.0 - salt_vs_pepper))
+
+    for X_img in X_sp:
+        # Add Salt noise
+        coords = [np.random.randint(0, i - 1, int(num_salt)) for i in X_img.shape]
+        X_img[coords[0], coords[1], :] = 1
+
+        # Add Pepper noise
+        coords = [np.random.randint(0, i - 1, int(num_pepper)) for i in X_img.shape]
+        X_img[coords[0], coords[1], :] = 0
+    return X_sp, Y_sp
+
+
+def add_gaussian_noise(X_imgs, Y_imgs):
+    X_gn = []
+    Y_gn = Y_imgs
+    row, col, _ = X_imgs[0].shape
+    # Gaussian distribution parameters
+    mean = 0
+    var = 0.1
+    sigma = var ** 0.5
+
+    for X_img in X_imgs:
+        gaussian = np.random.random((row, col, 1)).astype(np.float32)
+        gaussian = np.concatenate((gaussian, gaussian, gaussian), axis = 2)
+        gaussian_img = cv2.addWeighted(X_img, 0.75, 0.25 * gaussian, 0.25, 0)
+        X_gn.append(gaussian_img)
+    X_gn = np.array(X_gn, dtype = np.float32)
+    return X_gn, Y_gn
