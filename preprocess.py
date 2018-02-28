@@ -140,7 +140,7 @@ def add_gaussian_noise(X_imgs, Y_imgs):
     for X_img in X_imgs:
         gaussian = np.random.random((row, col, 1)).astype(np.float32)
         gaussian = np.concatenate((gaussian, gaussian, gaussian), axis = 2)
-        gaussian_img = cv2.addWeighted(X_img, 0.75, 0.25 * gaussian, 0.25, 0)
+        gaussian_img = cv2.addWeighted(X_img.astype(np.float32), 0.75, 0.25 * gaussian, 0.25, 0)
         X_gn.append(gaussian_img)
     X_gn = np.array(X_gn, dtype = np.float32)
     return X_gn, Y_gn

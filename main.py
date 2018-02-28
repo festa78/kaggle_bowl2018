@@ -23,7 +23,8 @@ from skimage.morphology import label
 import tensorflow as tf
 from tqdm import tqdm
 
-from preprocess import central_scale_images, rotate_images, flip_images, invert_images
+from preprocess import central_scale_images, rotate_images, flip_images, \
+    invert_images, add_salt_pepper_noise, add_gaussian_noise
 
 # Set some parameters
 IMG_WIDTH = 256
@@ -84,8 +85,14 @@ X_train_flip, Y_train_flip = flip_images(X_train, Y_train)
 print('invert images')
 X_train_inv, Y_train_inv = invert_images(X_train, Y_train)
 
-X_train = np.concatenate((X_train, X_train_scale, X_train_rot, X_train_flip, X_train_inv))
-Y_train = np.concatenate((Y_train, Y_train_scale, Y_train_rot, Y_train_flip, Y_train_inv))
+print('add salt pepper noise')
+X_train_sp, Y_train_sp = add_salt_pepper_noise(X_train, Y_train)
+
+print('add gaussian noise')
+X_train_gauss, Y_train_gauss = add_gaussian_noise(X_train, Y_train)
+
+X_train = np.concatenate((X_train, X_train_scale, X_train_rot, X_train_flip, X_train_inv, X_train_sp, X_train_gauss))
+Y_train = np.concatenate((Y_train, Y_train_scale, Y_train_rot, Y_train_flip, Y_train_inv, Y_train_sp, Y_train_gauss))
 
 # Define IoU metric
 def mean_iou(y_true, y_pred):
