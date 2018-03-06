@@ -1,0 +1,3 @@
+[submodule "pytorch-seg"]
+	path = pytorch-seg
+	url = https://github.com/festa78/pytorch-seg
